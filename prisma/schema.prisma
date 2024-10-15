@@ -1,0 +1,31 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User model: A user can create multiple to-do items
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique                      // Email must be unique
+  name      String?                               // Name is optional
+  password  String                                // User's password (hashed)
+  todos     ToDo[]                               // One-to-many relationship: A user has multiple to-dos
+  createdAt DateTime  @default(now())             // Timestamp when the user was created
+  updatedAt DateTime  @updatedAt                  // Timestamp automatically updated when the user is modified
+}
+
+// ToDo model: Represents a task belonging to a user
+model ToDo {
+  id          Int      @id @default(autoincrement()) // Primary key
+  title       String                                // Task title
+  description String?                               // Optional task description
+  status      String   @default("PENDING")          // Status of the task as a string (PENDING or COMPLETED)
+  user        User     @relation(fields: [userId], references: [id]) // Many-to-one relationship (to-do belongs to a user)
+  userId      Int                                    // Foreign key for the user
+  createdAt   DateTime  @default(now())             // Timestamp when the task was created
+  updatedAt   DateTime  @updatedAt                  // Timestamp automatically updated when the task is modified
+}
