@@ -1,18 +1,20 @@
-const express = require("express"); // Import Express
-const { PrismaClient } = require("@prisma/client"); // Import Prisma Client
-const cors = require("cors"); // Import CORS for cross-origin resource sharing
-
-// Initialize Express app
+const express = require("express");
+const { PrismaClient } = require("@prisma/client");
+const cors = require("cors");
 const app = express();
-const prisma = new PrismaClient(); // Initialize Prisma client
+const prisma = new PrismaClient();
 
-// Middleware to parse JSON and allow CORS
 app.use(express.json());
 app.use(cors());
 
-// Example route to create a new to-do item
+// Create a new to-do item
 app.post("/todos", async (req, res) => {
   const { title, description, userId } = req.body;
+
+  if (!title || !userId) {
+    return res.status(400).json({ error: "Title and userId are required." });
+  }
+
   try {
     const newToDo = await prisma.toDo.create({
       data: {
@@ -23,24 +25,35 @@ app.post("/todos", async (req, res) => {
     });
     res.json(newToDo);
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "An error occurred while creating the to-do item." });
+    console.error("Error creating to-do:", error); // This will log the detailed error in the backend console
+    res.status(500).json({ error: "Failed to create the to-do." });
   }
 });
 
-// Example route to get all to-do items for a user
-app.get("/users/:userId/todos", async (req, res) => {
-  const { userId } = req.params;
+// Fetch all to-do items
+app.get("/todos", async (req, res) => {
   try {
-    const todos = await prisma.toDo.findMany({
-      where: { userId: Number(userId) },
-    });
+    const todos = await prisma.toDo.findMany();
     res.json(todos);
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching the to-do items." });
+    console.error("Error fetching todos:", error);
+    res.status(500).json({ error: "Failed to fetch to-dos." });
+  }
+});
+
+app.post("/create-user", async (req, res) => {
+  try {
+    const newUser = await prisma.user.create({
+      data: {
+        email: "test@example.com",
+        password: "password", // Example password
+        name: "Test User",
+      },
+    });
+    res.json(newUser);
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ error: "Failed to create the user." });
   }
 });
 
